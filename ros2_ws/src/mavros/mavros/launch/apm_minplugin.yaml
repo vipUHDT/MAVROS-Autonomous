@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    plugin_denylist:
+      # common
+      - ["*"]
+
+    plugin_allowlist:
+      - sys_status        # FCU status, arming, mode, battery
+      - sys_time          # Time sync between Jetson & FCU
+      - param             # Parameter access
+      - command           # Arming, takeoff, mode change services
+      - local_position    # Pose, odom, velocity topics
+      - imu               # IMU data from FCU
+      - setpoint_raw      # Offboard control (SET_POSITION_TARGET_LOCAL_NED)
+      - global_position   # GPS fix & altitude
+      - mission		  # Waypoint reaches

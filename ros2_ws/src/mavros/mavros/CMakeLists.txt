@@ -205,7 +205,7 @@ target_link_libraries(mavros_node mavros)
 ament_python_install_package(${PROJECT_NAME})
 
 # NOTE(vooon): for some reason console_scripts do not work with ament_python!
-install(PROGRAMS scripts/mav
+install(PROGRAMS scripts/mav scripts/auto_script.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

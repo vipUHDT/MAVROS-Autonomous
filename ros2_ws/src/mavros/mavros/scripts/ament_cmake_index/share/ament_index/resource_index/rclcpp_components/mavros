@@ -1,0 +1,2 @@
+mavros::router::Router;lib/libmavros.so
+mavros::uas::UAS;lib/libmavros.so
