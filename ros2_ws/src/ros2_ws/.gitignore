@@ -1,0 +1,66 @@
+# ===============================
+# ROS 2 Workspace .gitignore
+# ===============================
+
+# colcon build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# CMake / Make
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+Makefile
+*.o
+*.so
+*.a
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Large ROS data files
+*.bag
+*.bag.active
+*.db3
+*.pcd
+*.ply
+*.stl
+*.dae
+*.bin
+*.onnx
+*.pt
+*.h5
+*.zip
+*.tar
+*.tar.gz
+
+# Logs
+*.log
+
+# IP Images
+*.jpg
+*.hdf5
+*.png
+# ===============================
+# End of .gitignore
+# ===============================
+

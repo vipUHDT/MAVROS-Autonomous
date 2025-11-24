@@ -54,7 +54,7 @@ class WaypointMission(Node):
 
         # --- State and synchronization ---
         self.current_state = State()
-        self.current_waypoint_index = -1
+        self.current_waypoint_index = 0
         self.waypoint_reached_event = threading.Event()
 
         # Sensor placeholders
@@ -192,56 +192,6 @@ class WaypointMission(Node):
         if os.path.exists(test_file):
             os.remove(test_file)
 
-    def setup_search_area_waypoints(self):
-        """
-        Generate search pattern and export HTML map.
-        """
-        # Change this path if needed
-        #config = Config("/home/uhdt/UHDT-ODCL-2025/config/config.yaml")
-
-        #bound1 = config.params["airdrop"]["boundary"]["bound_1"]
-        #ound2 = config.params["airdrop"]["boundary"]["bound_2"]
-        #bound3 = config.params["airdrop"]["boundary"]["bound_3"]
-        #bound4 = config.params["airdrop"]["boundary"]["bound_4"]
-
-        #boundary_coords = [bound1, bound2, bound3, bound4]
-
-        #photo_width = config.params["camera"]["search_area_calculator"]["photo_height"]
-        #photo_height = config.params["camera"]["search_area_calculator"]["photo_width"]
-        ##horizontal_fov = config.params["camera"]["search_area_calculator"]["horizontal_fov"]
-        #vertical_fov = config.params["camera"]["search_area_calculator"]["vertical_fov"]
-        #overlap = config.params["camera"]["search_area_calculator"]["overlap"]
-        #flight_altitude = config.params["camera"]["search_area_calculator"]["flight_altitude"]
-        #is_reversed = config.params["camera"]["search_area_calculator"]["is_reversed"]
-
-        """(drone_waypoints, angle, rect_centroid,
-         transformer_to_utm, transformer_from_utm,
-         ground_width, ground_height, n_cols, n_rows) = plan_mission(
-            boundary_coords,
-            photo_width,
-            photo_height,
-            horizontal_fov,
-            vertical_fov,
-            overlap,
-            altitude=flight_altitude
-        )
-
-        export_map(
-            "map.html",
-            boundary_coords,
-            drone_waypoints,
-            flight_altitude,
-            angle,
-            rect_centroid,
-            transformer_to_utm,
-            transformer_from_utm,
-            ground_width,
-            ground_height,
-            n_cols,
-            n_rows,
-            is_reversed,
-        )"""
-
     def load_search_area_waypoints(self):
         """
         Load waypoints from JSON file
@@ -260,7 +210,7 @@ class WaypointMission(Node):
         """
         ROS2 version using /mavros/param/set (ParamSetV2).
 
-        name  : ArduPilot parameter name, e.g. "WPNAV_SPEED"
+        name  : ArduPilot parameter name "WPNAV_SPEED"
         value : numeric value (we send it as DOUBLE)
         """
         if not self.param_client.wait_for_service(timeout_sec=5.0):
@@ -340,7 +290,8 @@ class WaypointMission(Node):
         self.detection_manager = DetectionManager(
             model_config,
             self.camera_metadata,
-            self.georef_engine
+            self.georef_engine,
+            self.sendGPS,
         )
 
         # Hadron camera setup
@@ -533,6 +484,9 @@ class WaypointMission(Node):
                 
                 rgb_save_path= self.data_manager.image_datasets[self.data_manager.dataset_map['rgb']].directory / f"rgb-{img_name}.png"
                 
+                with open(str(self.data_manager.image_datasets[self.data_manager.dataset_map['rgb']].directory / f"{img_name}.txt"), 'w') as file:
+                    file.write(f"{lat} {lon} {alt} {roll} {pitch} {yaw}")
+                	
 
                 cv2.imwrite(rgb_save_path, image)
             
@@ -560,8 +514,8 @@ class WaypointMission(Node):
                 #detection_manager.queueImage(QueuedImage(image, platform_state))
             
             #detection_manager.processQueue()
-            self.detection_manager.processQueuedImages()
-            self.detection_manager.update()
+            #self.detection_manager.processQueuedImages()
+            #self.detection_manager.update()
 
             time.sleep(3)
             self.get_logger().info(
@@ -573,6 +527,7 @@ class WaypointMission(Node):
             )
             iteration += 1
 
+            '''
             # Send Robodog
             gps_coords = self.detection_manager.getGPS()
             self.get_logger().info(f"Target GPS: {gps_coords}")
@@ -586,6 +541,7 @@ class WaypointMission(Node):
                 self.get_logger().info("!-------- Sent target to Robodog --------!")
             else:
                 self.get_logger().info(f"Detected nothing at waypoint {i}")
+            '''
   
 
 
@@ -651,6 +607,20 @@ class WaypointMission(Node):
         self.search_area_waypoint_time.append(elapsed)
         self.get_logger().info("UAS COMPLETED SEARCHING THE AREA")
 
+    def sendGPS(self, gps_coords):
+            #gps_coords = self.detection_manager.getGPS()
+            self.get_logger().info(f"Target GPS: {gps_coords}")
+
+            if (gps_coords):
+                target_lat, target_lon = gps_coords
+
+                #self.publish_gps_target(target_lat, target_lon, 0.0, topic='/gps_targets')
+                self.publish_gps_target_cli(target_lat, target_lon, 0.0, topic='/gps_targets')
+
+                self.get_logger().info("!-------- Sent target to Robodog --------!")
+            else:
+                self.get_logger().info(f"Detected nothing at waypoint")
+
     def end_mission(self):
         """
         Fly to the predefined end-mission hover point.
@@ -675,8 +645,26 @@ class WaypointMission(Node):
         """
         self.is_armed()
         self.is_guided()
-
+        
+        '''
+        self.send_global_position_target(21.4002113, -157.7645811, 5)
+        self.get_logger().info(f"Waiting for waypoint to be reached...")
+        self.waypoint_reached_event.wait()
+        self.get_logger().info(f"Reached search waypoint")
+        time.sleep(2)
+        
+        self.waypoint_reached_event.clear()
+        
+        self.send_global_position_target(21.4001452, -157.7647454, 5)
+        self.get_logger().info(f"Waiting for waypoint to be reached...")
+        self.waypoint_reached_event.wait()
+        self.get_logger().info(f"Reached search waypoint")
+        time.sleep(2)
+        '''
         self.search_area_command()
+
+        #time.sleep(30)
+        
         self.end_mission()
 
         self.get_logger().info("Mission Completed.")
@@ -730,4 +718,4 @@ def main():
 
 
 if __name__ == '__main__':
-
+    main()
