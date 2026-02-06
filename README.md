@@ -49,7 +49,7 @@ rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
-## 5. Build Livox LiDAR packages
+## 5.1 Build Livox LiDAR packages
 
 Build Livox-SDK by following https://github.com/Livox-SDK/Livox-SDK2/blob/master/README.md
 
@@ -59,7 +59,7 @@ cd ~ros2_ws/src/livox_ros_driver2
 ./setup.sh humble
 ```
 
-## 5. Build the Workspace with Colcon Build Tool
+## 5.2 Build the Workspace with Colcon Build Tool
 ```
 cd ~/ros2_ws
 colcon build --symlink-install
